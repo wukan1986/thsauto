@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thsauto"
+authors = [
+    {name = "wukan", email = "wu-kan@163.com"},
+]
+description = "ths automation test"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["ths", "automation"]
+license = {text = "MIT"}
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+dependencies = [
+    "pandas",
+    "uiautomator2",
+    "lxml",
+]
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["thsauto"]
+
+[tool.setuptools.dynamic]
+version = {attr = "thsauto._version.__version__"}
