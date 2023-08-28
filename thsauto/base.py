@@ -8,14 +8,31 @@ from .xpath import XPath
 
 
 def order_is_done(status: str) -> bool:
-    """委托状态是否为最终状态
+    """委托状态是否为最终状态。目前此功能用于提前结束委托列表的滑动遍历
 
     TODO: 需要观察还有哪些状态。是否会出现不同券商的同状态叫法不同？
+
+    // 147_状态说明
+    #define ZTSM_NotSent			0	// 0-未申报
+    #define ZTSM_1					1	//
+    #define ZTSM_New				2	// 2-已申报未成交,未成交,已报
+    #define ZTSM_Illegal			3	// 3-非法委托
+    #define ZTSM_4					4	//
+    #define ZTSM_PartiallyFilled	5	// 5-部分成交
+    #define ZTSM_AllFilled			6	// 6-全部成交,已成,全部成交
+    #define ZTSM_PartiallyCancelled	7	// 7-部成部撤，部撤
+    #define ZTSM_AllCancelled		8	// 8-全部撤单,已撤,全部撤单
+    #define ZTSM_CancelRejected		9	// 9-撤单未成					只会出现撤单记录中
+    #define ZTSM_WaitingForReport	10	// 10-等待人工申报
+
+    // 已成,部成,废单,已撤,部撤
+
     """
     # 全部撤单 内部撤单
     if status.find('撤') >= 0:
         return True
-    if status in ('已成交',):
+    # 全部成交
+    if status in ('全部成交', '已成'):
         return True
     # 待申报 未成交
     return False
@@ -69,7 +86,7 @@ def get_positions(d: u2.Device) -> List[tuple]:
         x.dump_hierarchy()
         list1, list2 = _positions_in_view(d, x)
         lists.extend(list2)
-        root.fling.forward()
+        root.scroll.forward()
         time.sleep(1.0)
         x.dump_hierarchy()
 
@@ -81,10 +98,11 @@ def get_positions(d: u2.Device) -> List[tuple]:
     return lists
 
 
-def _orders_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple]]:
+def _orders_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple], str]:
     root = d(resourceId="com.hexin.plat.android:id/chedan_recycler_view")
     count = root.info.get('childCount')
 
+    last_status = ''
     list1 = []
     list2 = []
     for i in range(1, count + 1):
@@ -96,11 +114,13 @@ def _orders_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple]]:
         # ['其他']
         list1.append(i)
         list2.append(tup)
+        if len(tup) > 0:
+            last_status = tup[-1]
 
-    return list1, list2
+    return list1, list2, last_status
 
 
-def get_orders(d: u2.Device) -> List[tuple]:
+def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
     d(resourceId="com.hexin.plat.android:id/btn", text="撤单").click()
 
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
@@ -111,9 +131,15 @@ def get_orders(d: u2.Device) -> List[tuple]:
     lists = []
     while not x.same_hierarchy():
         x.dump_hierarchy()
-        list1, list2 = _orders_in_view(d, x)
+        list1, list2, last_status = _orders_in_view(d, x)
         lists.extend(list2)
-        root.fling.forward()
+
+        # 提前返回
+        if break_after_done and order_is_done(last_status):
+            logger.info(f'已经搜索完可撤区，提前返回。{last_status=}')
+            break
+
+        root.scroll.forward()
         time.sleep(1.0)
         x.dump_hierarchy()
 
@@ -159,7 +185,7 @@ def _dialog_content(d: u2.Device) -> Dict[str, str]:
     return {k: v.get_text() for k, v in nodes.items()}
 
 
-def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True):
+def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[str, str], Dict[str, str]]:
     """批量撤单"""
     nodes = {
         'all': d(resourceId="com.hexin.plat.android:id/quanche_tv"),
@@ -196,6 +222,7 @@ def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True):
         prompt = _dialog_content(d)
         logger.warning(prompt)
         _dialog2_select(d, 1)
+
     return confirm, prompt
 
 
@@ -210,11 +237,8 @@ def cancel_single(d: u2.Device,
                   order,
                   input_mask=(True, True, True, False, True, False, True, False),
                   inside_mask=(True, True, True, False, True, False, True, False),
-                  debug=True):
+                  debug=True) -> Tuple[Dict[str, str], Dict[str, str]]:
     """单笔委托撤单"""
-    # 有可能没有重新查询委托列表，导致订单已经完成，但点击时已经灰了
-    assert not order_is_done(order[-1]), f'旧状态已完成，不可再撤, {order=}'
-
     # 过滤为真部分
     order = tuple([j for i, j in zip(input_mask, order) if i])
     logger.info(f'{order=}')
@@ -231,18 +255,26 @@ def cancel_single(d: u2.Device,
     found = -1
     while not x.same_hierarchy():
         x.dump_hierarchy()
-        list1, list2 = _orders_in_view(d, x)
+        list1, list2, last_status = _orders_in_view(d, x)
         # 这里的位置从1开始
         for idx, order_ in zip(list1, list2):
             tup = tuple([j for i, j in zip(inside_mask, order_) if i])
             if order == tup:
+                if order_is_done(order_[-1]):
+                    logger.warning(f'状态已完成，不可再撤, {idx=}, {order_=}')
+                    return {}, {}
                 found = idx
-                assert not order_is_done(order_[-1]), f'新状态已完成，不可再撤, {order_=}'
                 break
         # 这里的位置从1开始
         if found > 0:
             break
-        root.fling.forward()
+
+        # 提前返回
+        if order_is_done(last_status):
+            logger.info(f'已经搜索完可撤区，提前返回。{last_status=}')
+            break
+
+        root.scroll.forward()
         time.sleep(1.0)
         x.dump_hierarchy()
 
@@ -304,7 +336,7 @@ def _place_order(d: u2.Device, symbol: str, price: str, qty: str) -> None:
     d(resourceId="com.hexin.plat.android:id/btn_transaction").click()
 
 
-def _place_order_auto(d: u2.Device, symbol: str, price: str, qty: str, debug: bool):
+def _place_order_auto(d: u2.Device, symbol: str, price: str, qty: str, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     """下单后，自动进行之后的各项点击与确认"""
     _place_order(d, symbol, price, qty)
 
@@ -390,11 +422,11 @@ def _dialog2_select(d: u2.Device, opt: int = 1) -> None:
     nodes[opt].click()
 
 
-def buy(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> dict:
+def buy(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     d(resourceId="com.hexin.plat.android:id/btn", text="买入").click()
     return _place_order_auto(d, symbol, price, qty, debug)
 
 
-def sell(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> dict:
+def sell(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     d(resourceId="com.hexin.plat.android:id/btn", text="卖出").click()
     return _place_order_auto(d, symbol, price, qty, debug)

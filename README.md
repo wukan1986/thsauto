@@ -13,16 +13,20 @@
 ## 对比
 ### [easytrader](https://github.com/shidenggui/easytrader)
 1. 原理：`pywinauto`进行鼠标键盘模拟
-2. 优点：PC版客户端可以设置省略弹出框，所以委托速度还算可以
-3. 缺点: PC版新客户端复制列表时需要输入验证码，也不能安装在虚拟机中，由于鼠标键盘不能用，独占电脑
+2. 优点：PC版客户端可以设置省略弹出框，所以委托速度还行。下一笔约1~2秒，但赶不上专用软件的扫单功能。
+3. 缺点: PC版新客户端复制列表时需要输入验证码，由于鼠标键盘占用，所以得独占电脑
 ### [THSTrader](https://github.com/nladuo/THSTrader)
 1. 原理: 使用Google的`UIAutomator`技术进行辅助控制。使用`easyocr`对截图进行文本识别
 2. 优点：Android版比PC版支持的券商更多
 3. 缺点：截图识别效率太低、速度慢。截图对位置大小有要求，分辨率不能随意改动。依赖`pytorch`等库，还需外网下载识别模型。
 ### [thsauto](https://github.com/wukan1986/thsauto)
 1. 原理: 使用Google的`UIAutomator`技术进行辅助控制。使用`XPath`进行文字提取，跳过了文本识别
-2. 优点：支持的券商多。支持本地和远程，不独占电脑
-3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版
+2. 优点：支持的券商多。支持本地和远程，不占用鼠标键盘，不独占电脑
+3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约6~7秒
+
+- 下单速度：easytrader > thsauto >= THSTrader
+- 查询速度：easytrader > thsauto >> THSTrader
+- 客户端占有率：Android(thsauto/THSTrader) > PC(easytrader)
 
 ## `uiautomator2`的局限
 1. 查询界面时，不可见部分查询不到，需要滑动实现
@@ -37,7 +41,7 @@ pip install -U thsauto
 ```
 或二次开发
 ```commandline
-git clone --depth=1 https://github.com/wukan1986/thsauto
+git clone --depth=1 https://github.com/wukan1986/thsauto.git
 cd thsauto
 pip install -e .
 ```
@@ -99,7 +103,7 @@ t.get_positions()
 """
 
 # 委托
-t.get_orders()
+t.get_orders(break_after_done=True)
 """
 名称	委托时间	委托价	成交均价	委托量	已成交量	买卖	状态
 0	浦发银行	21:16:56	5.00	0.0	100	0	买入	未成交

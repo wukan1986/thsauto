@@ -9,7 +9,7 @@ t = THS(debug=True)
 t.connect(addr="emulator-5554")
 # %%
 # 可事后再改成可以下单
-t._debug = False
+# t.debug = False
 # %%
 # 资产
 balance = t.get_balance()
@@ -20,7 +20,7 @@ positions = t.get_positions()
 positions
 # %%
 # 委托
-orders = t.get_orders()
+orders = t.get_orders(break_after_done=True)
 orders
 # %%
 # 委托。未处理的原始数据

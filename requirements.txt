@@ -1,3 +1,4 @@
 pandas
 uiautomator2
 lxml
+loguru
