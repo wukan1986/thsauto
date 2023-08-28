@@ -5,6 +5,9 @@
 from thsauto import THS
 
 # 初次使用请在`debug=True`模式下多测试几次
+# 再次测试在模拟炒股下再开启`debug=False`
+# 然后再在其它账号下`debug=True`模式下测试
+# 最后是其它账号下`debug=False`下交易
 t = THS(debug=True)
 t.connect(addr="emulator-5554")
 # %%
