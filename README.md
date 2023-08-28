@@ -24,14 +24,14 @@
 2. 优点：支持的券商多。支持本地和远程，不占用鼠标键盘，不独占电脑
 3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约6~7秒
 
-- 下单速度(越小越好)：easytrader < thsauto <= THSTrader
-- 查询速度(越小越好)：easytrader < thsauto << THSTrader
+- 下单耗时(越小越好)：easytrader < thsauto <= THSTrader
+- 查询耗时(越小越好)：easytrader < thsauto << THSTrader
 - 市场占有率(越大越好)：Android > PC，所以在不能使用easytrader的情况下也许能用thsauto/THSTrader
 
 ## `uiautomator2`的局限
 1. 查询界面时，不可见部分查询不到，需要滑动实现
 2. 无法遍历列表控件，通过滑动变通实现，很难保证不重复、不遗漏
-3. 持仓列表不会重复，委托列表由于报单速度慢，重复的可能性小，也算适配
+3. 持仓列表不会重复，委托列表由于报单速度慢，重复的可能性小
 4. 设置分辨率长屏，同时显示更多行，需要滑动的次数少，能缓解此局限
 
 ## 安装
@@ -48,9 +48,9 @@ pip install -e .
 
 ## 安装雷电9模拟器
 下载页：https://ldmnq.com/other/version-history-and-release-notes.html  
-安装包名类似于`ldinst_9.0.57.2.exe`而不是`ldplayer9_ld_112_ld.exe`
+安装包名类似于`ldinst_9.0.57.2.exe`（约500MB）而不是`ldplayer9_ld_112_ld.exe`（约3MB）
 
-## 模拟器配置分辨率
+## 模拟器设置分辨率
 1. 软件设置 -> 性能设置 -> 手机版 ->720*1280(dpi 320)
     - 此分变率在`weditor`显示中正好匹配，可用于二次开发。
 2. 自定义-> 360*1500(dpi 180)
@@ -63,10 +63,10 @@ pip install -e .
 下载页：https://m.10jqka.com.cn/ 右上角按钮进行下载。需下载Android版(文件扩展名为`apk`)
 
 ## 安装配置ADB(初级用户可不做)
-将安装路径 `D:\leidian\LDPlayer9`，添加到环境变量后就可以在控制台中使用`adb`命令了
+将安装路径 `D:\leidian\LDPlayer9`，添加到`环境变量`后就可以在控制台中使用`adb`命令了
 
 ## 测试连接模拟器(可不做)
-查看模拟器设备名，一般默认为`emulator-5554`
+查看模拟器设备名，一般默认值为`emulator-5554`
 ```commandline
 adb kill-server
 adb devices
@@ -77,11 +77,12 @@ python -m uiautomator2 init
 ```
 
 ## 演示
-本自动化测试工具没有`登录`和`切换账号`功能，所以需要用户自己先打开到指定界面。
+本自动化测试工具没有`登录`和`切换账号`功能，所以需要用户自己先打开指定界面。
 1. 打开同花顺APP
-2. 最下导航栏->交易
-3. 最上导航栏->模拟
+2. 最下导航栏 -> 交易
+3. 最上导航栏 -> 模拟
 4. 点击中间区域（买入、卖出、撤单、持仓、查询）五个图标按钮中任意一个，即可进入交易界面
+5. 注意：在任何步骤执行完毕，都不应当出现弹出对话框未关闭的情况，否则会阻断之后的执行。如果遇到能复现错误，请截图并保留日志
 
 ### VSCode运行[demo示例](examples/demo.py)
 ```python
