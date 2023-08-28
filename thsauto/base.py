@@ -204,7 +204,10 @@ def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[st
 
     # 滚动到指定位置
     root.scroll.to(text='全撤')
-    assert node.wait(exists=True, timeout=2.0), "找不到 ['全撤', '撤买', '撤卖'] 三个按钮。请单笔委托撤单"
+    if not node.wait(exists=True, timeout=2.0):
+        logger.warning("找不到 ['全撤', '撤买', '撤卖'] 三个按钮。请单笔委托撤单")
+        return {}, {}
+
     node.click()
     confirm = {}
     prompt = {}
@@ -312,23 +315,17 @@ def _place_order(d: u2.Device, symbol: str, price: str, qty: str) -> None:
     stockvolume = str(qty)
 
     auto_stockcode = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
-    auto_stockcode.wait(exists=True, timeout=2.0)
+    auto_stockcode.click(timeout=2.0)  # 点击后弹出键盘精灵
 
-    # 输入股票代码
-    auto_stockcode.click()
-    dialogplus_view_container = d(resourceId="com.hexin.plat.android:id/dialogplus_view_container")
-    dialogplus_view_container.wait(exists=True, timeout=2.0)
-    node = dialogplus_view_container.child(className='android.widget.EditText')
+    node = d(resourceId="com.hexin.plat.android:id/dialogplus_view_container").child(className='android.widget.EditText')
     node.click()
     node.set_text(stockcode)
     # 键盘精灵中第一条。断网情况下第一条可能不更新，导致选择错误，但下单也会失败，所以不会有严重后果
     stockcode_tv = d(resourceId="com.hexin.plat.android:id/stockcode_tv")
-    stockcode_tv.wait(exists=True, timeout=2.0)
-    stockcode_tv.click()
+    stockcode_tv.click(timeout=2.0)
 
     # 输入价格、数量、点击买卖按钮
     node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
-    node.click()
     node.set_text(stockprice)
     node = d(resourceId="com.hexin.plat.android:id/stockvolume").child(className="android.widget.EditText")
     node.click()
@@ -372,7 +369,7 @@ def _place_order_auto(d: u2.Device, symbol: str, price: str, qty: str, debug: bo
 
 
 def _check_confirm_order(d: u2.Device) -> bool:
-    """委托确认对话框晦检查"""
+    """委托确认对话框检查"""
     node1 = d(resourceId="com.hexin.plat.android:id/ok_btn")
     node1.wait(exists=True, timeout=2.0)
     node2 = d(resourceId="com.hexin.plat.android:id/cancel_btn")
@@ -381,28 +378,23 @@ def _check_confirm_order(d: u2.Device) -> bool:
 
 def _confirm_order(d: u2.Device) -> Dict[str, str]:
     """委托确认"""
-    nodes = {
-        '标题': d(resourceId="com.hexin.plat.android:id/dialog_title"),
-        '账户': d(resourceId="com.hexin.plat.android:id/account_value"),
-        '名称': d(resourceId="com.hexin.plat.android:id/stock_name_value"),
-        '代码': d(resourceId="com.hexin.plat.android:id/stock_code_value"),
-        '数量': d(resourceId="com.hexin.plat.android:id/number_value"),
-        '价格': d(resourceId="com.hexin.plat.android:id/price_value"),
-    }
-    return {k: v.get_text() for k, v in nodes.items()}
+    x = XPath(d)
+    x.dump_hierarchy()
+    t = x.xpath('//*[@resource-id="com.hexin.plat.android:id/dialog_layout"]/descendant::android.widget.TextView/@text')
+    t = ['标题'] + t
+    return dict(zip(t[::2], t[1::2]))
 
 
 def _confirm_cancel_single(d: u2.Device) -> Dict[str, str]:
     """撤单确认"""
-    nodes = {
-        '标题': d(resourceId="com.hexin.plat.android:id/title_view"),
-        '操作': d(resourceId="com.hexin.plat.android:id/option_textview"),
-        '名称': d(resourceId="com.hexin.plat.android:id/stockname_textview"),
-        '代码': d(resourceId="com.hexin.plat.android:id/stockcode_textview"),
-        '数量': d(resourceId="com.hexin.plat.android:id/ordernumber_textview"),
-        '价格': d(resourceId="com.hexin.plat.android:id/orderprice_textview"),
-    }
-    return {k: v.get_text() for k, v in nodes.items()}
+    x = XPath(d)
+    x.dump_hierarchy()
+    path1 = '//*[@resource-id="com.hexin.plat.android:id/title_view"]/@text'
+    path2 = '//*[@resource-id="com.hexin.plat.android:id/content_layout"]/descendant::android.widget.TextView/@text'
+    t = x.xpath(f'{path1} | {path2}')
+    t[0] = '标题  ' + t[0]  # 强行在第0位置加标题
+    t = t[:-1]  # 去了最后一行的 '您是否确认以上撤单？'
+    return {i[:2]: i[4:] for i in t}
 
 
 def _dialog3_cancel_single_select(d: u2.Device, opt: int = 0) -> None:

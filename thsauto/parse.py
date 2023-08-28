@@ -25,9 +25,6 @@ def parse_confirm_cancel(dict_):
     _d = {}
     for k, v in dict_.items():
         t = v.replace(' ', '')
-        if k != '标题':
-            t = t[2:]
-
         if k == '数量':
             t = int(t.replace(',', ''))
         if k == '价格':

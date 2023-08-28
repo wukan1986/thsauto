@@ -22,7 +22,7 @@
 ### [thsauto](https://github.com/wukan1986/thsauto)
 1. 原理：使用Google的`UIAutomator`技术进行辅助控制。使用`XPath`进行文字提取，跳过了文本识别
 2. 优点：支持的券商多。支持本地和远程，不占用鼠标键盘，不独占电脑
-3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约6~7秒
+3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约4~6秒
 
 - 下单耗时(越小越好)：easytrader < thsauto <= THSTrader
 - 查询耗时(越小越好)：easytrader < thsauto << THSTrader
