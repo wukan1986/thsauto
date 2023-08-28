@@ -14,19 +14,19 @@
 ### [easytrader](https://github.com/shidenggui/easytrader)
 1. 原理：`pywinauto`进行鼠标键盘模拟
 2. 优点：PC版客户端可以设置省略弹出框，所以委托速度还行。下一笔约1~2秒，但赶不上专用软件的扫单功能。
-3. 缺点: PC版新客户端复制列表时需要输入验证码，由于鼠标键盘占用，所以得独占电脑
+3. 缺点：PC版新客户端复制列表时需要输入验证码，由于鼠标键盘占用，所以得独占电脑
 ### [THSTrader](https://github.com/nladuo/THSTrader)
-1. 原理: 使用Google的`UIAutomator`技术进行辅助控制。使用`easyocr`对截图进行文本识别
+1. 原理：使用Google的`UIAutomator`技术进行辅助控制。使用`easyocr`对截图进行文本识别
 2. 优点：Android版比PC版支持的券商更多
 3. 缺点：截图识别效率太低、速度慢。截图对位置大小有要求，分辨率不能随意改动。依赖`pytorch`等库，还需外网下载识别模型。
 ### [thsauto](https://github.com/wukan1986/thsauto)
-1. 原理: 使用Google的`UIAutomator`技术进行辅助控制。使用`XPath`进行文字提取，跳过了文本识别
+1. 原理：使用Google的`UIAutomator`技术进行辅助控制。使用`XPath`进行文字提取，跳过了文本识别
 2. 优点：支持的券商多。支持本地和远程，不占用鼠标键盘，不独占电脑
 3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约6~7秒
 
-- 下单速度：easytrader > thsauto >= THSTrader
-- 查询速度：easytrader > thsauto >> THSTrader
-- 客户端占有率：Android(thsauto/THSTrader) > PC(easytrader)
+- 下单速度(越小越好)：easytrader < thsauto <= THSTrader
+- 查询速度(越小越好)：easytrader < thsauto << THSTrader
+- 市场占有率(越大越好)：Android > PC，所以在不能使用easytrader的情况下也许能用thsauto/THSTrader
 
 ## `uiautomator2`的局限
 1. 查询界面时，不可见部分查询不到，需要滑动实现
@@ -55,14 +55,26 @@ pip install -e .
     - 此分变率在`weditor`显示中正好匹配，可用于二次开发。
 2. 自定义-> 360*1500(dpi 180)
     - 实盘时，此分变率在本人电脑`2560*1600`下比较合适
-    - 宽360小，字体也就小，界面中可以显示更多行
+    - 宽360小于720，字体也就小，界面中可以显示更多行
     - 高1500小于1600，能显示更多行，又能防止长屏过长时软件界面压缩导致界面模糊
+    - dpi 120与dpi 180显示的委托列表行数一样多，目前使用的dpi 180
     
 ## 安装同花顺APP
-下载页：https://m.10jqka.com.cn/ 右上角按钮进行下载。需下载Android版
+下载页：https://m.10jqka.com.cn/ 右上角按钮进行下载。需下载Android版(文件扩展名为`apk`)
 
 ## 安装配置ADB(初级用户可不做)
 将安装路径 `D:\leidian\LDPlayer9`，添加到环境变量后就可以在控制台中使用`adb`命令了
+
+## 测试连接模拟器(可不做)
+查看模拟器设备名，一般默认为`emulator-5554`
+```commandline
+adb kill-server
+adb devices
+```
+初始化`uiautomator2`。1.3.0之后的版本已经不需要执行此步了，在`u2.connect`时会自动推送相关文件
+```commandline
+python -m uiautomator2 init
+```
 
 ## 演示
 本自动化测试工具没有`登录`和`切换账号`功能，所以需要用户自己先打开到指定界面。

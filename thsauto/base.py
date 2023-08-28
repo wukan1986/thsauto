@@ -321,7 +321,7 @@ def _place_order(d: u2.Device, symbol: str, price: str, qty: str) -> None:
     node = dialogplus_view_container.child(className='android.widget.EditText')
     node.click()
     node.set_text(stockcode)
-    # 键盘精灵中第一条
+    # 键盘精灵中第一条。断网情况下第一条可能不更新，导致选择错误，但下单也会失败，所以不会有严重后果
     stockcode_tv = d(resourceId="com.hexin.plat.android:id/stockcode_tv")
     stockcode_tv.wait(exists=True, timeout=2.0)
     stockcode_tv.click()
