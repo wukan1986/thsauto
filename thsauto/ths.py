@@ -3,14 +3,17 @@ from typing import Dict, Tuple, Any
 import pandas as pd
 import uiautomator2 as u2
 
-from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple
+from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple, init_navigation
 from .parse import parse_confirm_order, parse_orders, parse_positions, parse_balance, parse_confirm_cancel
 from .utils import Timer
+from .xpath import XPath
 
 
 class THS:
     # uiautomator2中的设备
     d = None
+    x = None
+    navigation = {}
 
     # 以下未处理的私有成员变量可以人工访问实现特别功能
     balance = {}
@@ -42,6 +45,10 @@ class THS:
         with Timer():
             self.d = u2.connect(addr)
             self.d.implicitly_wait(3.0)
+            # 这里会引导环境准备
+            self.x = XPath(self.d)
+            self.x.dump_hierarchy()
+            self.navigation = init_navigation(self.x)
 
     def get_balance(self) -> Dict[str, float]:
         """查询资产
@@ -52,6 +59,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['持仓'])
             self.balance = get_balance(self.d)
             return parse_balance(self.balance)
 
@@ -64,6 +72,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['持仓'])
             self.positions = get_positions(self.d)
             return parse_positions(self.positions)
 
@@ -81,6 +90,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['撤单'])
             self.orders = get_orders(self.d, break_after_done)
             return parse_orders(self.orders)
 
@@ -130,6 +140,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['撤单'])
             self.confirm, self.prompt = cancel_single(self.d, order, input_mask, inside_mask, self.debug)
             return parse_confirm_cancel(self.confirm), self.prompt
 
@@ -150,6 +161,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['撤单'])
             self.confirm, self.prompt = cancel_multiple(self.d, opt, self.debug)
             return self.confirm, self.prompt
 
@@ -174,6 +186,7 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['买入'])
             self.confirm, self.prompt = buy(self.d, symbol, price, qty, self.debug)
             return parse_confirm_order(self.confirm), self.prompt
 
@@ -198,5 +211,6 @@ class THS:
 
         """
         with Timer():
+            self.x.click_by_point(*self.navigation['卖出'])
             self.confirm, self.prompt = sell(self.d, symbol, price, qty, self.debug)
             return parse_confirm_order(self.confirm), self.prompt
