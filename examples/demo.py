@@ -8,10 +8,13 @@ from thsauto import THS
 # 再次测试在模拟炒股下再开启`debug=False`
 # 然后再在其它账号下`debug=True`模式下测试
 # 最后是其它账号下`debug=False`下交易
-t = THS(debug=True)
+t = THS(debug=True, skip_popup=False)
 t.connect(addr="emulator-5554")
+# t.connect(addr="38edccd4")
+# t.connect(addr="192.168.31.20:40851")
+
 # %%
-# 可事后再改成可以下单
+# 可事后再改成可以下单，也可以在下单函数中指定
 # t.debug = False
 # %%
 # 资产
@@ -30,16 +33,16 @@ orders
 t.orders
 # %%
 # 支持股票代码
-confirm, prompt = t.buy('600000', 5, 100)
+confirm, prompt = t.buy(5, -100, code='600000')
 confirm, prompt
 # %%
 # 支持股票名称。只要在键盘精灵中排第一即可
-confirm, prompt = t.sell('万科A', 200, 100)
+confirm, prompt = t.sell(123, 300, symbol='万科A', debug=True)
 confirm, prompt
 
 # %%
 # 支持拼音缩写。只要在键盘精灵中排第一即可
-confirm, prompt = t.sell('gzmt', 200, 100)
+confirm, prompt = t.sell(200, 100, symbol='gzmt', skip_popup=True)
 confirm, prompt
 
 # %%
@@ -53,8 +56,11 @@ confirm, prompt = t.cancel_multiple('buy')
 confirm, prompt
 # %%
 # 全撤
-confirm, prompt = t.cancel_multiple('all')
+confirm, prompt = t.cancel_multiple('all', debug=False)
 confirm, prompt
+
 # %%
+confirm, prompt = t.cancel_multiple('sell')
+confirm, prompt
 
 # %%

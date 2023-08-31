@@ -48,8 +48,6 @@ def init_navigation(x):
 
 
 def get_balance(d: u2.Device) -> Dict[str, str]:
-    # d(resourceId="com.hexin.plat.android:id/btn", text="持仓").click()
-
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
     # root.wait(exists=True, timeout=2.0)
     root.fling.toBeginning()
@@ -66,7 +64,7 @@ def get_balance(d: u2.Device) -> Dict[str, str]:
     return dict(zip(names, nums))
 
 
-def _positions_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple]]:
+def _positions_in_view(x: XPath) -> Tuple[List[int], List[tuple]]:
     elements = x.xpath('//*[@resource-id="com.hexin.plat.android:id/recyclerview_id"]/android.widget.RelativeLayout')
     count = len(elements)
 
@@ -83,8 +81,6 @@ def _positions_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple]]:
 
 
 def get_positions(d: u2.Device) -> List[tuple]:
-    # d(resourceId="com.hexin.plat.android:id/btn", text="持仓").click()
-
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
     root.fling.toBeginning()
     root.fling.toBeginning()
@@ -94,7 +90,7 @@ def get_positions(d: u2.Device) -> List[tuple]:
     lists = []
     x.dump_hierarchy()
     while not x.same_hierarchy():
-        list1, list2 = _positions_in_view(d, x)
+        list1, list2 = _positions_in_view(x)
         lists.extend(list2)
         root.scroll.forward()
         time.sleep(1.0)
@@ -108,7 +104,7 @@ def get_positions(d: u2.Device) -> List[tuple]:
     return lists
 
 
-def _orders_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple], str]:
+def _orders_in_view(x: XPath) -> Tuple[List[int], List[tuple], str]:
     elements = x.xpath('//*[@resource-id="com.hexin.plat.android:id/chedan_recycler_view"]/android.widget.LinearLayout')
     count = len(elements)
 
@@ -131,8 +127,6 @@ def _orders_in_view(d: u2.Device, x: XPath) -> Tuple[List[int], List[tuple], str
 
 
 def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
-    # d(resourceId="com.hexin.plat.android:id/btn", text="撤单").click()
-
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
     root.fling.toBeginning()
     root.fling.toBeginning()
@@ -142,7 +136,7 @@ def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
     lists = []
     x.dump_hierarchy()
     while not x.same_hierarchy():
-        list1, list2, last_status = _orders_in_view(d, x)
+        list1, list2, last_status = _orders_in_view(x)
         lists.extend(list2)
 
         # 提前返回
@@ -162,32 +156,19 @@ def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
     return lists
 
 
-def _check_cancel_multiple(d: u2.Device) -> bool:
+def _wait_cancel_multiple(d: u2.Device) -> bool:
     """检查是弹出批量撤单确认，还是不支持"""
-    node = d(resourceId="com.hexin.plat.android:id/cancel_btn")
-    return node.exists(timeout=2.0)
+    return d(resourceId="com.hexin.plat.android:id/cancel_btn").wait(exists=True, timeout=2.0)
 
 
-def _confirm_cancel_multiple(d: u2.Device) -> Dict[str, str]:
+def _confirm_cancel_multiple(x: XPath) -> Dict[str, str]:
     """批量撤单对话框"""
-    nodes = {
-        '标题': d(resourceId="com.hexin.plat.android:id/dialog_title"),
-        '证券账户': d(resourceId="com.hexin.plat.android:id/account_tv"),
-        '撤单对象': d(resourceId="com.hexin.plat.android:id/clearance_stock_tv"),
-    }
-    return {k: v.get_text() for k, v in nodes.items()}
+    texts = x.xpath('//*[@resource-id="com.hexin.plat.android:id/dialog_layout"]/descendant::android.widget.TextView/@text')
+    texts = ['标题'] + texts
+    return dict(zip(texts[::2], texts[1::2]))
 
 
-def _dialog_prompt_device(d: u2.Device) -> Dict[str, str]:
-    """有标题提示对象框"""
-    nodes = {
-        '标题': d(resourceId="com.hexin.plat.android:id/dialog_title"),
-        '内容': d(resourceId="com.hexin.plat.android:id/prompt_content"),
-    }
-    return {k: v.get_text() for k, v in nodes.items()}
-
-
-def _dialog_prompt_xpath(x: XPath) -> Dict[str, str]:
+def _dialog_prompt(x: XPath) -> Dict[str, str]:
     """有标题提示对象框"""
     path1 = '//*[@resource-id="com.hexin.plat.android:id/dialog_title"]/@text'
     path2 = '//*[@resource-id="com.hexin.plat.android:id/prompt_content"]/@text'
@@ -198,12 +179,14 @@ def _dialog_prompt_xpath(x: XPath) -> Dict[str, str]:
     return dict(zip(names, texts))
 
 
-def _dialog_content(d: u2.Device) -> Dict[str, str]:
+def _dialog_content(x: XPath) -> Dict[str, str]:
     """无标题提示对象框"""
-    nodes = {
-        '内容': d(resourceId="com.hexin.plat.android:id/prompt_content"),
-    }
-    return {k: v.get_text() for k, v in nodes.items()}
+    path2 = '//*[@resource-id="com.hexin.plat.android:id/prompt_content"]/@text'
+    texts = x.xpath(f'{path2}')
+
+    names = ['内容']
+
+    return dict(zip(names, texts))
 
 
 def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[str, str], Dict[str, str]]:
@@ -219,6 +202,7 @@ def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[st
     node = nodes[opt]
 
     x = XPath(d)
+    x.dump_hierarchy()
     elements = x.xpath('//*[@resource-id="com.hexin.plat.android:id/chedan_recycler_view"]/android.widget.LinearLayout')
     count = len(elements)
     if count == 0:
@@ -236,27 +220,28 @@ def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[st
     confirm = {}
     prompt = {}
     # 有两种情况。1. 撤单确认 2. 不支持批量撤单
-    if _check_cancel_multiple(d):
+    if _wait_cancel_multiple(d):
+        x.dump_hierarchy()
         # 1. 撤单确认
-        confirm = _confirm_cancel_multiple(d)
+        confirm = _confirm_cancel_multiple(x)
         logger.info(confirm)
         if debug:
-            _dialog2_select_device(d, 0)
+            _dialog2_select(x, 0)
         else:
-            _dialog2_select_device(d, 1)
+            _dialog2_select(x, 1)
     else:
+        x.dump_hierarchy()
         # 2. 不支持批量撤单
-        prompt = _dialog_content(d)
+        prompt = _dialog_content(x)
         logger.warning(prompt)
-        _dialog2_select_device(d, 1)
+        _dialog2_select(x, 1)
 
     return confirm, prompt
 
 
-def _check_cancel_single(d: u2.Device) -> bool:
+def _wait_cancel_single(d: u2.Device) -> bool:
     """检查是弹出单笔委托撤单的三选择，还是无反应"""
-    node = d(resourceId="com.hexin.plat.android:id/option_cancel")
-    return node.exists(timeout=2.0)
+    return d(resourceId="com.hexin.plat.android:id/option_cancel").wait(exists=True, timeout=2.0)
 
 
 def cancel_single(d: u2.Device,
@@ -271,8 +256,6 @@ def cancel_single(d: u2.Device,
     if len(order) == 0:
         return {}, {}
 
-    # d(resourceId="com.hexin.plat.android:id/btn", text="撤单").click()
-
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
     root.fling.toBeginning()
     root.fling.toBeginning()
@@ -282,7 +265,7 @@ def cancel_single(d: u2.Device,
     found = -1
     while not x.same_hierarchy():
         x.dump_hierarchy()
-        list1, list2, last_status = _orders_in_view(d, x)
+        list1, list2, last_status = _orders_in_view(x)
         # 这里的位置从1开始
         for idx, order_ in zip(list1, list2):
             tup = tuple([j for i, j in zip(inside_mask, order_) if i])
@@ -311,19 +294,22 @@ def cancel_single(d: u2.Device,
 
     # 这里的位置从0开始
     node = root.child(index=found - 1, clickable=True)
-    node.wait(exists=True, timeout=2.0)
-    node.click()
+    node.click(timeout=2.0)
+
     # 两种情况：1. 弹出撤单确认对话框。 2. 灰了点击无反应
-    if _check_cancel_single(d):
+    if _wait_cancel_single(d):
+        x = XPath(d)
+        x.dump_hierarchy()
+
         # 1. 弹出撤单确认对话框
-        confirm = _confirm_cancel_single(d)
+        confirm = _confirm_cancel_single(x)
         logger.info(confirm)
         if debug:
             # 取消
-            _dialog3_cancel_single_select(d, 2)
+            _dialog3_cancel_single_select(x, 2)
         else:
             # 撤单。建议之后再查一下委托列表进行状态更新
-            _dialog3_cancel_single_select(d, 0)
+            _dialog3_cancel_single_select(x, 0)
     else:
         # 2. 灰了点击无反应
         confirm = {}
@@ -331,12 +317,12 @@ def cancel_single(d: u2.Device,
     return confirm, {}
 
 
-def _place_order(d: u2.Device, symbol: str, price: str, qty: str) -> None:
+def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> Dict[str, str]:
     """下单动作。输入股票代码、股票名称、缩写都可以。只要在键盘精灵中排第一即可"""
     # 输入参数类型修正
-    stockcode = str(symbol)
     stockprice = str(price)
     stockvolume = str(qty)
+    stockcode = str(code or symbol)  # 取其中可用的
 
     # 等特定对象出现
     node = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
@@ -345,84 +331,97 @@ def _place_order(d: u2.Device, symbol: str, price: str, qty: str) -> None:
     x = XPath(d)
     x.dump_hierarchy()
     # 点击后弹出键盘精灵
-    x.click_by_path('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]')
+    x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]'))
 
     # 等待键盘精灵出现并输入
     node = d(resourceId="com.hexin.plat.android:id/dialogplus_view_container").child(className='android.widget.EditText')
     node.wait(exists=True, timeout=2.0)
-    x.set_text(node, stockcode)
+    x.set_text(node, stockcode)  # 这里输入后，可能网络慢，还是已有持仓。特别是在前几笔网络还没有刷新时
 
     # 如何等待更新和关闭
     # 键盘精灵中第一条。断网情况下第一条可能不更新，导致选择错误，但下单也会失败，所以不会有严重后果
     node = d(resourceId="com.hexin.plat.android:id/stockcode_tv")
-    node.click_gone(interval=1.0)
+    node.wait(exists=True, timeout=2.0)  # 用于拖延时间
+    node.click_gone(interval=1.0)  # 然后再点击
 
     # 先数量
     node = d(resourceId="com.hexin.plat.android:id/stockvolume").child(className="android.widget.EditText")
-    x.set_text(node, stockvolume)
+    try:
+        x.set_text(node, stockvolume)
+    except u2.exceptions.UiObjectNotFoundError:
+        x.dump_hierarchy()
+        # {'标题': '系统信息', '内容': '股票代码不存在'}
+        prompt = _dialog_prompt(x)
+        logger.info(prompt)
+        _dialog2_select(x, 1)
+        return prompt
+
     # 再价格。后写入。等着软件自动写入后再写入
     node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
     x.set_text(node, stockprice)
+
+    if code is not None:
+        # 设置了code，就得对比
+        node = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
+        text = node.get_text()
+        assert code == text, f'{code=}, {text=}, 检测到输入代码与自动完成代码不对应，请检查'
+
     # 点击买卖按钮
-    x.click_by_path('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds')
+    x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds'))
+    return {}
 
 
-def _place_order_auto(d: u2.Device, symbol: str, price: str, qty: str, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+def _place_order_auto(d: u2.Device, price: str, qty: str, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     """下单后，自动进行之后的各项点击与确认"""
-    _place_order(d, symbol, price, qty)
-
     confirm = {}
-    prompt = {}
+    prompt = _place_order(d, price, qty, symbol, code)
+    if len(prompt) > 0:
+        return {}, prompt
+
+    if skip_popup:
+        # 跳过了自动点击功能，需交由第三方工具进行后面的点击操作，如`李跳跳`
+        return confirm, prompt
 
     x = XPath(d)
+    if _wait_confirm_order(d):
+        x.dump_hierarchy()
+
     # 1. 直接提示不合法
     # 2. 委托确认
-    if _check_confirm_order(d, x):
+    if x.exists('//*[@resource-id="com.hexin.plat.android:id/cancel_btn"]'):
         confirm = _confirm_order(x)
         # {'标题': '委托卖出确认', '账户': 'A123456', '名称': '华海药业', '代码': '600521', '数量': 1, '价格': 100.0}
         logger.info(confirm)
+
         if debug:
-            _dialog2_select_xpath(x, 0)
+            _dialog2_select(x, 0)
         else:
             # 确认下单
-            _dialog2_select_xpath(x, 1)
+            _dialog2_select(x, 1)
             # {'标题': '系统信息', '内容': '股票余额不足 ,不允许卖空'}
             # {'标题': '系统信息', '内容': '卖出数量必须是100的整数倍'}
             # {'标题': '系统信息', '内容': '委托已提交，合同号为：3672041198'}
 
             # 这里只是起到等待按钮的功能,不检查后面的操作
-            _wait_confirm_order(d, x)  # TODO: 这步慢，1s，如何提速？
-            prompt = _dialog_prompt_xpath(x)
+            _wait_confirm_order(d)  # TODO: 这步慢1s，如何提速？
+            x.dump_hierarchy()
+
+            prompt = _dialog_prompt(x)
             logger.info(prompt)
-            _dialog2_select_xpath(x, 1)
+            _dialog2_select(x, 1)
     else:
         # {'标题': '系统信息', '内容': '委托价格不合法，请重新输入'}
         # {'标题': '系统信息', '内容': '委托数量必须大于0'}
-        prompt = _dialog_prompt_xpath(x)
+        prompt = _dialog_prompt(x)
         logger.info(prompt)
-        _dialog2_select_xpath(x, 1)
+        _dialog2_select(x, 1)
     # 返回个两个字典。出错时，第一个字典为空
     return confirm, prompt
 
 
-def _wait_confirm_order(d: u2.Device, x: XPath) -> None:
+def _wait_confirm_order(d: u2.Device) -> bool:
     """委托确认对话框检查。等待后再dump"""
-    node1 = d(resourceId="com.hexin.plat.android:id/ok_btn")
-    if node1.wait(exists=True, timeout=2.0):
-        # 等待后再dump
-        x.dump_hierarchy()
-    return
-
-
-def _check_confirm_order(d: u2.Device, x: XPath) -> bool:
-    """委托确认对话框检查。等待后再dump"""
-    node1 = d(resourceId="com.hexin.plat.android:id/ok_btn")
-    if node1.wait(exists=True, timeout=2.0):
-        # 等待后再dump
-        x.dump_hierarchy()
-        res = x.xpath('//*[@resource-id="com.hexin.plat.android:id/cancel_btn"]')
-        return len(res) > 0
-    return False
+    return d(resourceId="com.hexin.plat.android:id/ok_btn").wait(exists=True, timeout=2.0)
 
 
 def _confirm_order(x: XPath) -> Dict[str, str]:
@@ -432,10 +431,8 @@ def _confirm_order(x: XPath) -> Dict[str, str]:
     return dict(zip(t[::2], t[1::2]))
 
 
-def _confirm_cancel_single(d: u2.Device) -> Dict[str, str]:
+def _confirm_cancel_single(x: XPath) -> Dict[str, str]:
     """撤单确认"""
-    x = XPath(d)
-    x.dump_hierarchy()
     path1 = '//*[@resource-id="com.hexin.plat.android:id/title_view"]/@text'
     path2 = '//*[@resource-id="com.hexin.plat.android:id/content_layout"]/descendant::android.widget.TextView/@text'
     t = x.xpath(f'{path1} | {path2}')
@@ -444,36 +441,26 @@ def _confirm_cancel_single(d: u2.Device) -> Dict[str, str]:
     return {i[:2]: i[4:] for i in t}
 
 
-def _dialog3_cancel_single_select(d: u2.Device, opt: int = 0) -> None:
+def _dialog3_cancel_single_select(x: XPath, opt: int = 0) -> None:
     nodes = {
-        0: d(resourceId="com.hexin.plat.android:id/option_chedan"),
-        1: d(resourceId="com.hexin.plat.android:id/option_chedan_and_buy"),
-        2: d(resourceId="com.hexin.plat.android:id/option_cancel"),
+        0: '//*[@resource-id="com.hexin.plat.android:id/option_chedan"]/@bounds',
+        1: '//*[@resource-id="com.hexin.plat.android:id/option_chedan_and_buy"]/@bounds',
+        2: '//*[@resource-id="com.hexin.plat.android:id/option_cancel"]/@bounds',
     }
-    nodes[opt].click()
+    x.click(*x.center(nodes[opt]))
 
 
-def _dialog2_select_device(d: u2.Device, opt: int = 1) -> None:
-    nodes = {
-        0: d(resourceId="com.hexin.plat.android:id/cancel_btn"),
-        1: d(resourceId="com.hexin.plat.android:id/ok_btn"),
-    }
-    nodes[opt].click()
-
-
-def _dialog2_select_xpath(x: XPath, opt: int = 1) -> None:
+def _dialog2_select(x: XPath, opt: int = 1) -> None:
     nodes = {
         0: '//*[@resource-id="com.hexin.plat.android:id/cancel_btn"]/@bounds',
         1: '//*[@resource-id="com.hexin.plat.android:id/ok_btn"]/@bounds',
     }
-    x.click_by_path(nodes[opt])
+    x.click(*x.center(nodes[opt]))
 
 
-def buy(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
-    d(resourceId="com.hexin.plat.android:id/btn", text="买入").click()
-    return _place_order_auto(d, symbol, price, qty, debug)
+def buy(d: u2.Device, price: float, qty: int, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+    return _place_order_auto(d, price, qty, symbol, code, debug, skip_popup)
 
 
-def sell(d: u2.Device, symbol: str, price: float, qty: int, debug: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
-    d(resourceId="com.hexin.plat.android:id/btn", text="卖出").click()
-    return _place_order_auto(d, symbol, price, qty, debug)
+def sell(d: u2.Device, price: float, qty: int, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+    return _place_order_auto(d, price, qty, symbol, code, debug, skip_popup)

@@ -1,11 +1,13 @@
+from typing import Tuple
+
 from lxml import etree
 from uiautomator2 import UiObject
 
 
-def center(text: str):
+def center(bounds: str) -> Tuple[float, float]:
     # {"x":80,"y":834,"width":280,"height":88}
     # '[80,834][360,922]'
-    x1, y1, x2, y2 = eval(text.replace('][', ','))
+    x1, y1, x2, y2 = eval(bounds.replace('][', ','))
     return (x1 + x2) // 2, (y1 + y2) // 2
 
 
@@ -42,43 +44,26 @@ class XPath:
         """返回xpath匹配的结果"""
         return self._root.xpath(path)
 
-    def exists(self, path):
+    def exists(self, path) -> bool:
+        """路径是否存在"""
         return len(self.xpath(path)) > 0
 
-    def click_by_path(self, path: str):
-        """点击对应位置控件
-
-        Parameters
-        ----------
-        path
-
-        Notes
-        -----
-        需要提前`dump_hierarchy`
-
-        Examples
-        --------
-        >>> x = XPath(d)
-        >>> x.dump_hierarchy()
-        >>> x.click_by_path('//*[@resource-id="com.hexin.plat.android:id/ok_btn"]/@bounds')
-
-        """
-        """通过xpth来点击"""
-        # 需要取按钮位置
+    def center(self, path: str) -> Tuple[int, int]:
+        """取中心点"""
         if not path.endswith('/@bounds'):
             path += '/@bounds'
-        # 这里有约100~150ms的耗时，能不能更快?
-        self.click_by_point(*center(self.xpath(path)[0]))
+        return center(self.xpath(path)[0])
 
-    def click_by_point(self, x, y):
+    def click(self, x, y):
+        """点击"""
         self._d.jsonrpc.click(x, y)
 
-    def set_text(self, obj: UiObject, text: str):
+    def set_text(self, uiobj: UiObject, text: str) -> None:
         """设置文本
 
         Parameters
         ----------
-        obj: UiObject
+        uiobj: UiObject
         text: str
 
         Notes
@@ -92,4 +77,4 @@ class XPath:
         >>> x.set_text(node, '123')
 
         """
-        self._d.jsonrpc.setText(obj.selector, text)
+        self._d.jsonrpc.setText(uiobj.selector, text)

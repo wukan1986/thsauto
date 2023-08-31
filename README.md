@@ -22,7 +22,7 @@
 ### [thsauto](https://github.com/wukan1986/thsauto)
 1. 原理：使用Google的`UIAutomator`技术进行辅助控制。使用`XPath`进行文字提取，跳过了文本识别
 2. 优点：支持的券商多。支持本地和远程，不占用鼠标键盘，不独占电脑
-3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约4~6秒
+3. 缺点：Android版客户端没有跳过弹出对话框的设置，所以速度要慢于PC版。下一笔约3~5秒。目前还无法与无障碍工具联动
 
 - 下单耗时(越小越好)：easytrader < thsauto <= THSTrader
 - 查询耗时(越小越好)：easytrader < thsauto << THSTrader
@@ -33,6 +33,7 @@
 2. 无法遍历列表控件，通过滑动变通实现，很难保证不重复、不遗漏
 3. 持仓列表不会重复，委托列表由于报单速度慢，重复的可能性小
 4. 设置分辨率长屏，同时显示更多行，需要滑动的次数少，能缓解此局限
+5. 可惜，目前无法与`无障碍服务`共存
 
 ## 安装
 以下安装方法参考于`THSTrader`项目
@@ -46,9 +47,9 @@ cd thsauto
 pip install -e .
 ```
 
-## 安装雷电9模拟器
+## 安装雷电模拟器
 下载页：https://ldmnq.com/other/version-history-and-release-notes.html  
-安装包名类似于`ldinst_9.0.57.2.exe`（约500MB）而不是`ldplayer9_ld_112_ld.exe`（约3MB）
+安装包名类似于`ldinst64_5.0.67.2.exe`或`ldinst_9.0.57.2.exe`，约400MB~500MB，而不是`ldplayer9_ld_112_ld.exe`（约3MB）
 
 ## 模拟器设置分辨率
 1. 软件设置 -> 性能设置 -> 手机版 ->720*1280(dpi 320)
@@ -62,10 +63,10 @@ pip install -e .
 ## 安装同花顺APP
 下载页：https://m.10jqka.com.cn/ 右上角按钮进行下载。需下载Android版(文件扩展名为`apk`)
 
-## 安装配置ADB(初级用户可不做)
-将安装路径 `D:\leidian\LDPlayer9`，添加到`环境变量`后就可以在控制台中使用`adb`命令了
+## 安装配置ADB
+将安装路径`D:\leidian\LDPlayer9`或`D:\leidian\LDPlayer64`，添加到`环境变量`后就可以在控制台中使用`adb`命令了
 
-## 测试连接模拟器(可不做)
+## 测试连接模拟器
 查看模拟器设备名，一般默认值为`emulator-5554`
 ```commandline
 adb kill-server
@@ -95,6 +96,7 @@ from thsauto import THS
 # 最后是其它账号下`debug=False`下交易
 t = THS(debug=True)
 t.connect(addr="emulator-5554")
+t.home()
 
 # 资产
 t.get_balance()

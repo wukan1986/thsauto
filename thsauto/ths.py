@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 
 import pandas as pd
 import uiautomator2 as u2
@@ -13,6 +13,7 @@ class THS:
     # uiautomator2中的设备
     d = None
     x = None
+    # 导航栏几个按扭位置
     navigation = {}
 
     # 以下未处理的私有成员变量可以人工访问实现特别功能
@@ -22,7 +23,7 @@ class THS:
     confirm = {}
     prompt = {}
 
-    def __init__(self, debug: bool = True) -> None:
+    def __init__(self, debug: bool = True, skip_popup: bool = False) -> None:
         """初始化
 
         Parameters
@@ -30,9 +31,16 @@ class THS:
         debug: bool
             调试模式下不改变柜台状态。即下单和撤单时最后一步会自动点击取消
             初次使用时，请在`debug=True`模拟账号下走一遍流程
+        skip_popup: bool
+            启用后，下单时的弹出框的确认将交由`李跳跳`等工具完成。好处是弹出框关闭快、下单更快
+            1. 用户需自行设置好相应的工具软件
+            2. 弹出框的内容不再读取返回
+            3. 实测`无障碍服务`与`uiautomator2`冲突，等这个问题解决后，这个功能就能正常使用了
+
 
         """
         self.debug: bool = debug
+        self.skip_popup: bool = skip_popup
 
     def connect(self, addr: str = "emulator-5554") -> None:
         """连接
@@ -46,9 +54,26 @@ class THS:
             self.d = u2.connect(addr)
             self.d.implicitly_wait(3.0)
             # 这里会引导环境准备
+            return self.d.info
+
+    def home(self):
+        """页首。这里记录了几个导航按钮的位置"""
+        with Timer():
+            assert self.d is not None, '请先执行`connect()`'
             self.x = XPath(self.d)
             self.x.dump_hierarchy()
             self.navigation = init_navigation(self.x)
+            if len(self.navigation) != 5:
+                self.x = None
+                raise Exception("请检查当前是否处于可交易界面!!!")
+
+    def goto(self, tab: str):
+        if True:
+            if self.x is None:
+                self.home()
+            self.x.click(*self.navigation[tab])
+        else:
+            self.d(resourceId="com.hexin.plat.android:id/btn", text=tab).click()
 
     def get_balance(self) -> Dict[str, float]:
         """查询资产
@@ -59,7 +84,7 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['持仓'])
+            self.goto('持仓')
             self.balance = get_balance(self.d)
             return parse_balance(self.balance)
 
@@ -72,7 +97,7 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['持仓'])
+            self.goto('持仓')
             self.positions = get_positions(self.d)
             return parse_positions(self.positions)
 
@@ -82,7 +107,8 @@ class THS:
         Parameters
         ----------
         break_after_done: bool
-            遇到订单已是最终状态时跳出查询，此功能建立在列表已经排序，已经成交和已经撤单的订单排在最后的特点。没有此特点的列表不需要启用此功能
+            遇到订单已是最终状态时跳出查询，此功能建立在列表已经排序，已经成交和已经撤单的订单排在最后的特点。
+            没有此特点的列表不要启用此功能
 
         Returns
         -------
@@ -90,7 +116,7 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['撤单'])
+            self.goto('撤单')
             self.orders = get_orders(self.d, break_after_done)
             return parse_orders(self.orders)
 
@@ -113,7 +139,8 @@ class THS:
 
     def cancel_single(self, order,
                       input_mask=(True, True, True, False, True, False, True, False),
-                      inside_mask=(True, True, True, False, True, False, True, False)) -> Tuple[Dict[str, Any], Dict[str, str]]:
+                      inside_mask=(True, True, True, False, True, False, True, False),
+                      debug: Optional[bool] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """笔委托撤单
 
         Parameters
@@ -124,6 +151,8 @@ class THS:
             输入中选择部分用来比较
         inside_mask: tuple
             列表中选择部分用来比较
+        debug: bool or None
+            可临时应用新`debug`参数
 
         Returns
         -------
@@ -140,11 +169,13 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['撤单'])
-            self.confirm, self.prompt = cancel_single(self.d, order, input_mask, inside_mask, self.debug)
+            self.goto('撤单')
+            debug = self.debug if debug is None else debug
+            self.confirm, self.prompt = cancel_single(self.d, order, input_mask, inside_mask, debug)
             return parse_confirm_cancel(self.confirm), self.prompt
 
-    def cancel_multiple(self, opt: str = 'all') -> Tuple[Dict[str, str], Dict[str, str]]:
+    def cancel_multiple(self, opt: str = 'all',
+                        debug: Optional[bool] = None) -> Tuple[Dict[str, str], Dict[str, str]]:
         """批量撤单
 
         Parameters
@@ -158,24 +189,35 @@ class THS:
             需要人工确认的信息
         prompt: dict
             无需人工确认的提示信息
+        debug: bool or None
+            可临时应用新`debug`参数
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['撤单'])
-            self.confirm, self.prompt = cancel_multiple(self.d, opt, self.debug)
+            self.goto('撤单')
+            debug = self.debug if debug is None else debug
+            self.confirm, self.prompt = cancel_multiple(self.d, opt, debug)
             return self.confirm, self.prompt
 
-    def buy(self, symbol: str, price: float, qty: int) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    def buy(self, price: float, qty: int, *,
+            symbol: Optional[str] = None, code: Optional[str] = None,
+            debug: Optional[bool] = None, skip_popup: Optional[bool] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """买入委托
 
         Parameters
         ----------
-        symbol: str
-            证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一即可。推荐使用证券代码
         price: float
             委托价
         qty: int
             委托量
+        symbol: str
+            证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一，不做校验
+        code: str
+            证券代码。会对输入进行校验。推荐使用证券代码
+        debug: bool or None
+            可临时应用新`debug`参数
+        skip_popup: bool or None
+            可临时应用新`skip_popup`参数
 
         Returns
         -------
@@ -186,21 +228,31 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['买入'])
-            self.confirm, self.prompt = buy(self.d, symbol, price, qty, self.debug)
+            self.goto('买入')
+            debug = self.debug if debug is None else debug
+            skip_popup = self.skip_popup if skip_popup is None else skip_popup
+            self.confirm, self.prompt = buy(self.d, price, qty, symbol, code, debug, skip_popup)
             return parse_confirm_order(self.confirm), self.prompt
 
-    def sell(self, symbol: str, price: float, qty: int) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    def sell(self, price: float, qty: int, *,
+             symbol: Optional[str] = None, code: Optional[str] = None,
+             debug: Optional[bool] = None, skip_popup: Optional[bool] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """卖出委托
 
         Parameters
         ----------
-        symbol: str
-            证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一即可。推荐使用证券代码
         price: float
             委托价
         qty: int
             委托量
+        symbol: str
+            证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一，不做校验
+        code: str
+            证券代码。会对输入进行校验。推荐使用证券代码
+        debug: bool or None
+            可临时应用新`debug`参数
+        skip_popup: bool or None
+            可临时应用新`skip_popup`参数
 
         Returns
         -------
@@ -211,6 +263,8 @@ class THS:
 
         """
         with Timer():
-            self.x.click_by_point(*self.navigation['卖出'])
-            self.confirm, self.prompt = sell(self.d, symbol, price, qty, self.debug)
+            self.goto('卖出')
+            debug = self.debug if debug is None else debug
+            skip_popup = self.skip_popup if skip_popup is None else skip_popup
+            self.confirm, self.prompt = sell(self.d, price, qty, symbol, code, debug, skip_popup)
             return parse_confirm_order(self.confirm), self.prompt
