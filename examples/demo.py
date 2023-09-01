@@ -33,16 +33,16 @@ orders
 t.orders
 # %%
 # 支持股票代码
-confirm, prompt = t.buy(5, -100, code='600000')
+confirm, prompt = t.buy(-100, 5, code='600000')
 confirm, prompt
 # %%
 # 支持股票名称。只要在键盘精灵中排第一即可
-confirm, prompt = t.sell(123, 300, symbol='万科A', debug=True)
+confirm, prompt = t.sell('300', '11', symbol='万科A', debug=True)
 confirm, prompt
 
 # %%
 # 支持拼音缩写。只要在键盘精灵中排第一即可
-confirm, prompt = t.sell(200, 100, symbol='gzmt', skip_popup=True)
+confirm, prompt = t.sell(200, float('nan'), symbol='gzmt', skip_popup=True)
 confirm, prompt
 
 # %%

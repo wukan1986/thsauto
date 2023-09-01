@@ -317,8 +317,10 @@ def cancel_single(d: u2.Device,
     return confirm, {}
 
 
-def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> Dict[str, str]:
+def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -> Dict[str, str]:
     """下单动作。输入股票代码、股票名称、缩写都可以。只要在键盘精灵中排第一即可"""
+    # 利用了nan的特点
+    is_nan = price != price
     # 输入参数类型修正
     stockprice = str(price)
     stockvolume = str(qty)
@@ -326,7 +328,7 @@ def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> 
 
     # 等特定对象出现
     node = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
-    node.wait(exists=True, timeout=2.0)
+    node.wait(exists=True, timeout=6.0)  # 可能有点问题，等待久一点试试
 
     x = XPath(d)
     x.dump_hierarchy()
@@ -375,18 +377,19 @@ def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> 
         return prompt
 
     # 再价格。后写入。等着软件自动写入后再写入
-    node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
-    x.set_text(node, stockprice)
+    if not is_nan:
+        node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
+        x.set_text(node, stockprice)
 
     # 点击买卖按钮
     x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds'))
     return {}
 
 
-def _place_order_auto(d: u2.Device, price: str, qty: str, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+def _place_order_auto(d: u2.Device, qty: int, price: float, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     """下单后，自动进行之后的各项点击与确认"""
     confirm = {}
-    prompt = _place_order(d, price, qty, symbol, code)
+    prompt = _place_order(d, qty, price, symbol, code)
     if len(prompt) > 0:
         return {}, prompt
 
@@ -470,9 +473,9 @@ def _dialog2_select(x: XPath, opt: int = 1) -> None:
     x.click(*x.center(nodes[opt]))
 
 
-def buy(d: u2.Device, price: float, qty: int, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
-    return _place_order_auto(d, price, qty, symbol, code, debug, skip_popup)
+def buy(d: u2.Device, qty: int, price: float, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+    return _place_order_auto(d, qty, price, symbol, code, debug, skip_popup)
 
 
-def sell(d: u2.Device, price: float, qty: int, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
-    return _place_order_auto(d, price, qty, symbol, code, debug, skip_popup)
+def sell(d: u2.Device, qty: int, price: float, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+    return _place_order_auto(d, qty, price, symbol, code, debug, skip_popup)

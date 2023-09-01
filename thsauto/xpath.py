@@ -52,7 +52,9 @@ class XPath:
         """取中心点"""
         if not path.endswith('/@bounds'):
             path += '/@bounds'
-        return center(self.xpath(path)[0])
+        bounds = self.xpath(path)
+        # 有可能这个点还没有完全显示，导致不存在
+        return center(bounds[0])
 
     def click(self, x, y):
         """点击"""

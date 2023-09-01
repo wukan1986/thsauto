@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Tuple, Any, Optional, Union
 
 import pandas as pd
 import uiautomator2 as u2
@@ -182,6 +182,8 @@ class THS:
         ----------
         opt: str
             `all` `buy` `sell`
+        debug: bool or None
+            可临时应用新`debug`参数
 
         Returns
         -------
@@ -189,8 +191,6 @@ class THS:
             需要人工确认的信息
         prompt: dict
             无需人工确认的提示信息
-        debug: bool or None
-            可临时应用新`debug`参数
 
         """
         with Timer():
@@ -199,17 +199,17 @@ class THS:
             self.confirm, self.prompt = cancel_multiple(self.d, opt, debug)
             return self.confirm, self.prompt
 
-    def buy(self, price: float, qty: int, *,
+    def buy(self, qty: Union[int, str], price: Union[float, str] = float('nan'), *,
             symbol: Optional[str] = None, code: Optional[str] = None,
             debug: Optional[bool] = None, skip_popup: Optional[bool] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """买入委托
 
         Parameters
         ----------
-        price: float
-            委托价
         qty: int
             委托量
+        price: float or str
+            委托价。如果使用默认值`float('nan')`将利用界面自动填入的`卖一价`
         symbol: str
             证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一，不做校验
         code: str
@@ -231,20 +231,20 @@ class THS:
             self.goto('买入')
             debug = self.debug if debug is None else debug
             skip_popup = self.skip_popup if skip_popup is None else skip_popup
-            self.confirm, self.prompt = buy(self.d, price, qty, symbol, code, debug, skip_popup)
+            self.confirm, self.prompt = buy(self.d, qty, price, symbol, code, debug, skip_popup)
             return parse_confirm_order(self.confirm), self.prompt
 
-    def sell(self, price: float, qty: int, *,
+    def sell(self, qty: Union[int, str], price: Union[float, str] = float('nan'), *,
              symbol: Optional[str] = None, code: Optional[str] = None,
              debug: Optional[bool] = None, skip_popup: Optional[bool] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """卖出委托
 
         Parameters
         ----------
-        price: float
-            委托价
-        qty: int
+        qty: int or str
             委托量
+        price: float or str
+            委托价。如果使用默认值`float('nan')`将利用界面自动填入的`买一价`
         symbol: str
             证券代码、名称、拼音缩写都支持。只要在键盘精灵排第一，不做校验
         code: str
@@ -266,5 +266,5 @@ class THS:
             self.goto('卖出')
             debug = self.debug if debug is None else debug
             skip_popup = self.skip_popup if skip_popup is None else skip_popup
-            self.confirm, self.prompt = sell(self.d, price, qty, symbol, code, debug, skip_popup)
+            self.confirm, self.prompt = sell(self.d, qty, price, symbol, code, debug, skip_popup)
             return parse_confirm_order(self.confirm), self.prompt

@@ -3,18 +3,18 @@ from thsauto import THS
 t = THS(debug=True, skip_popup=False)
 t.connect(addr="emulator-5554")
 
-i = 600800  # 600000 # 000001
-j = 100
-k = 200
+code = 600700  # 600000 # 000001
+price = float('nan')  # nan表示使用界面自动填充的对手价
+qty = 100
 
 # 遍历卖出，方便查看性能
 for r in range(10):
-    i += 1
-    j += 1
-    k += 1
-    print('=' * 20, i, j, k)
+    code += 1
+    price += 1
+    qty += 2
+    print('=' * 20, code, price, qty)
     try:
-        confirm, prompt = t.sell(j, k, code=f'{i:06d}', debug=True)
+        confirm, prompt = t.sell(qty, price=price, code=f'{code:06d}', debug=True)
         print(confirm, prompt)
     except AssertionError as e:
         print(e)

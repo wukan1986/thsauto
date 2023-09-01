@@ -154,7 +154,7 @@ t.orders
 """
 
 # 支持股票代码
-confirm, prompt = t.buy(5, 100, code='600000')
+confirm, prompt = t.buy(100, 5, code='600000')
 confirm, prompt
 """
 ({'标题': '委托买入确认',
