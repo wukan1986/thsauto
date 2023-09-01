@@ -31,7 +31,7 @@ def order_is_done(status: str) -> bool:
     # 全部撤单 内部撤单
     if status.find('撤') >= 0:
         return True
-    # 全部成交
+    # 全部成交 已成
     if status in ('全部成交', '已成'):
         return True
     # 待申报 未成交
@@ -341,12 +341,30 @@ def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> 
     # 如何等待更新和关闭
     # 键盘精灵中第一条。断网情况下第一条可能不更新，导致选择错误，但下单也会失败，所以不会有严重后果
     node = d(resourceId="com.hexin.plat.android:id/stockcode_tv")
-    node.wait(exists=True, timeout=2.0)  # 用于拖延时间
-    node.click_gone(interval=1.0)  # 然后再点击
+
+    # 等到数量稳定了才停才下，表示已经不更新了
+    last_count = -1
+    curr_count = node.count
+    while last_count != curr_count:
+        # print(last_count, curr_count)
+        time.sleep(0.5)
+        last_count = curr_count
+        curr_count = node.count
+
+    # 有可能出现curr_count==0的情况。可能是之前已经是当前股票了，所以自动点击了确认
+    if curr_count > 0:
+        if code is not None:
+            # 设置了code，就得对比。会降速
+            text = node.get_text()
+            node.click(timeout=2.0)
+            assert code == text, f'{code=}, {text=}, 检测到输入代码与自动完成代码不对应，请检查'
+        else:
+            node.click(timeout=2.0)
 
     # 先数量
     node = d(resourceId="com.hexin.plat.android:id/stockvolume").child(className="android.widget.EditText")
     try:
+        node.wait(exists=True, timeout=2.0)
         x.set_text(node, stockvolume)
     except u2.exceptions.UiObjectNotFoundError:
         x.dump_hierarchy()
@@ -359,12 +377,6 @@ def _place_order(d: u2.Device, price: str, qty: str, symbol: str, code: str) -> 
     # 再价格。后写入。等着软件自动写入后再写入
     node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
     x.set_text(node, stockprice)
-
-    if code is not None:
-        # 设置了code，就得对比
-        node = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
-        text = node.get_text()
-        assert code == text, f'{code=}, {text=}, 检测到输入代码与自动完成代码不对应，请检查'
 
     # 点击买卖按钮
     x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds'))
