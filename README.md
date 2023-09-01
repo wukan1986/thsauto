@@ -94,9 +94,8 @@ from thsauto import THS
 # 再次测试在模拟炒股下再开启`debug=False`
 # 然后再在其它账号下`debug=True`模式下测试
 # 最后是其它账号下`debug=False`下交易
-t = THS(debug=True)
+t = THS(debug=True, skip_popup=False)
 t.connect(addr="emulator-5554")
-t.home()
 
 # 资产
 t.get_balance()
@@ -155,7 +154,7 @@ t.orders
 """
 
 # 支持股票代码
-confirm, prompt = t.buy('600000', 5, 100)
+confirm, prompt = t.buy(5, 100, code='600000')
 confirm, prompt
 """
 ({'标题': '委托买入确认',
