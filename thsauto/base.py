@@ -49,7 +49,7 @@ def init_navigation(x):
 
 def get_balance(d: u2.Device) -> Dict[str, str]:
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
-    # root.wait(exists=True, timeout=2.0)
+    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -82,6 +82,7 @@ def _positions_in_view(x: XPath) -> Tuple[List[int], List[tuple]]:
 
 def get_positions(d: u2.Device) -> List[tuple]:
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
+    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -128,6 +129,7 @@ def _orders_in_view(x: XPath) -> Tuple[List[int], List[tuple], str]:
 
 def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
+    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -257,6 +259,7 @@ def cancel_single(d: u2.Device,
         return {}, {}
 
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
+    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -320,7 +323,7 @@ def cancel_single(d: u2.Device,
 def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -> Dict[str, str]:
     """下单动作。输入股票代码、股票名称、缩写都可以。只要在键盘精灵中排第一即可"""
     # 利用了nan的特点
-    is_nan = price != price
+    not_nan = price == price
     # 输入参数类型修正
     stockprice = str(price)
     stockvolume = str(qty)
@@ -377,7 +380,7 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
         return prompt
 
     # 再价格。后写入。等着软件自动写入后再写入
-    if not is_nan:
+    if not_nan:
         node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
         x.set_text(node, stockprice)
 
