@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools >= 40.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -24,8 +24,17 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+cli = [
+    "flask",
+    "fire",
+]
+
 [tool.setuptools]
 packages = ["thsauto"]
 
 [tool.setuptools.dynamic]
 version = {attr = "thsauto._version.__version__"}
+
+[project.scripts]
+thsauto = "thsauto.cli:_main"

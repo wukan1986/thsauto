@@ -38,13 +38,16 @@
 ## 安装
 以下安装方法参考于`THSTrader`项目
 ```commandline
+# 普通版
 pip install -U thsauto
+# CLI版和Web版
+pip install -U thsauto[cli]
 ```
 或二次开发
 ```commandline
 git clone --depth=1 https://github.com/wukan1986/thsauto.git
 cd thsauto
-pip install -e .
+pip install -e .[cli]
 ```
 
 ## 安装雷电模拟器
@@ -178,4 +181,44 @@ confirm, prompt
   '价格': 5.0},
  {})
 """
+```
+
+## Web服务
+为实现跨语言的调用，还使用`Flask`实现了Web服务。注意：需使用`pip install -U thsauto[cli]`安装
+
+```commandline
+# 启动Web服务
+# python -m thsauto run --host=0.0.0.0 --port=5000
+thsauto run --host=0.0.0.0 --port=5000
+
+# 支持的Web请求
+curl http://127.0.0.1:5000/connect?addr=emulator-5554
+curl http://127.0.0.1:5000/get_balance
+curl http://127.0.0.1:5000/get_positions
+curl http://127.0.0.1:5000/get_orders
+curl http://127.0.0.1:5000/order_at/0  # get_order后的顺序
+curl http://127.0.0.1:5000/buy?qty=100&price=nan&code=000001
+curl http://127.0.0.1:5000/sell?qty=100&price=5.1&code=000001
+curl http://127.0.0.1:5000/cancels/all # 支持的参数all buy sell
+curl http://127.0.0.1:5000/cancel/0  # get_order后的顺序
+
+```
+
+## CLI命令
+同时还提供了`CLI`接口，它实际上访问`Web`服务来实现相应功能，所以需先启动服务。注意：需使用`pip install -U thsauto[cli]`安装
+
+```commandline
+# 启动Web服务
+thsauto run --host=0.0.0.0 --port=5000
+
+# 支持的CLI指令
+thsauto connect --addr=emulator-5554
+thsauto get_balance
+thsauto get_positions
+thsauto get_orders
+thsauto order_at --idx=0
+thsauto buy --qty=100 --price=nan --code=000001
+thsauto sell --qty=100 --price=5.1 --code=000001
+thsauto cancels --opt=all
+thsauto cancel --idx=0
 ```

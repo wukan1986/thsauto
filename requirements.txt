@@ -2,3 +2,5 @@ pandas
 uiautomator2
 lxml
 loguru
+flask
+fire

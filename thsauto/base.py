@@ -215,8 +215,9 @@ def cancel_multiple(d: u2.Device, opt: str = 'all', debug=True) -> Tuple[Dict[st
     root = d(resourceId="com.hexin.plat.android:id/chedan_recycler_view")
     root.scroll.to(text='全撤')
     if not node.wait(exists=True, timeout=2.0):
-        logger.warning("找不到 ['全撤', '撤买', '撤卖'] 三个按钮。请单笔委托撤单")
-        return {}, {}
+        raise Exception("找不到 ['全撤', '撤买', '撤卖'] 三个按钮。请单笔委托撤单")
+        # logger.warning("找不到 ['全撤', '撤买', '撤卖'] 三个按钮。请单笔委托撤单")
+        # return {}, {}
 
     node.click()
     confirm = {}
@@ -274,8 +275,9 @@ def cancel_single(d: u2.Device,
             tup = tuple([j for i, j in zip(inside_mask, order_) if i])
             if order == tup:
                 if order_is_done(order_[-1]):
-                    logger.warning(f'状态已完成，不可再撤, {idx=}, {order_=}')
-                    return {}, {}
+                    raise Exception(f'状态已完成，不可再撤, {idx=}, {order_=}')
+                    # logger.warning(f'状态已完成，不可再撤, {idx=}, {order_=}')
+                    # return {}, {}
                 found = idx
                 break
         # 这里的位置从1开始
@@ -318,6 +320,9 @@ def cancel_single(d: u2.Device,
         confirm = {}
     # 为与全撤输出统一
     return confirm, {}
+
+
+btn_transaction = None
 
 
 def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -> Dict[str, str]:
@@ -384,8 +389,13 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
         node = d(resourceId="com.hexin.plat.android:id/stockprice").child(className="android.widget.EditText")
         x.set_text(node, stockprice)
 
-    # 点击买卖按钮
-    x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds'))
+    # 在显示分辨率不同时，可能导致点击不到，但第二次又能点击到，所以初始化时这个按钮还没有完全生成，所以需要第二次操作
+    global btn_transaction
+    if btn_transaction is None:
+        x.dump_hierarchy()
+        btn_transaction = x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds')
+
+    x.click(*btn_transaction)
     return {}
 
 
@@ -401,8 +411,8 @@ def _place_order_auto(d: u2.Device, qty: int, price: float, symbol: str, code: s
         return confirm, prompt
 
     x = XPath(d)
-    if _wait_confirm_order(d):
-        x.dump_hierarchy()
+    _wait_confirm_order(d)
+    x.dump_hierarchy()
 
     # 1. 直接提示不合法
     # 2. 委托确认

@@ -42,7 +42,7 @@ class THS:
         self.debug: bool = debug
         self.skip_popup: bool = skip_popup
 
-    def connect(self, addr: str = "emulator-5554") -> None:
+    def connect(self, addr: str = "emulator-5554") -> Dict[str, Any]:
         """连接
 
         Parameters
@@ -59,7 +59,7 @@ class THS:
     def home(self):
         """页首。这里记录了几个导航按钮的位置"""
         with Timer():
-            assert self.d is not None, '请先执行`connect()`'
+            assert self.d is not None, '请先执行`connect`'
             self.x = XPath(self.d)
             self.x.dump_hierarchy()
             self.navigation = init_navigation(self.x)
