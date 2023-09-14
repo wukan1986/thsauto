@@ -196,11 +196,11 @@ curl http://127.0.0.1:5000/connect?addr=emulator-5554
 curl http://127.0.0.1:5000/get_balance
 curl http://127.0.0.1:5000/get_positions
 curl http://127.0.0.1:5000/get_orders
-curl http://127.0.0.1:5000/order_at/0  # get_order后的顺序
+curl http://127.0.0.1:5000/order_at/0  # get_orders后的顺序
 curl http://127.0.0.1:5000/buy?qty=100&price=nan&code=000001
 curl http://127.0.0.1:5000/sell?qty=100&price=5.1&code=000001
 curl http://127.0.0.1:5000/cancels/all # 支持的参数all buy sell
-curl http://127.0.0.1:5000/cancel/0  # get_order后的顺序
+curl http://127.0.0.1:5000/cancel/0  # get_orders后的顺序
 
 ```
 
