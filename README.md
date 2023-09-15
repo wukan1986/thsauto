@@ -184,7 +184,7 @@ confirm, prompt
 ```
 
 ## Web服务
-为实现跨语言的调用，还使用`Flask`实现了Web服务。注意：需使用`pip install -U thsauto[cli]`安装
+为实现跨语言的调用，还使用`FastAPI`实现了Web服务。注意：需使用`pip install -U thsauto[cli]`安装
 
 ```commandline
 # 启动Web服务

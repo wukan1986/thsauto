@@ -339,9 +339,19 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
     node.wait(exists=True, timeout=6.0)  # 可能有点问题，等待久一点试试
 
     x = XPath(d)
-    x.dump_hierarchy()
+
+    # TODO: 为何这个点还没出现，可能是网络卡了？
+    auto_stockcode = (0, 0)
+    for i in range(3):
+        if auto_stockcode == (0, 0):
+            x.dump_hierarchy()
+            auto_stockcode = x.center('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]')
+            if i > 0:
+                time.sleep(0.5)
+        else:
+            break
     # 点击后弹出键盘精灵
-    x.click(*x.center('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]'))
+    x.click(*auto_stockcode)
 
     # 等待键盘精灵出现并输入
     node = d(resourceId="com.hexin.plat.android:id/dialogplus_view_container").child(className='android.widget.EditText')

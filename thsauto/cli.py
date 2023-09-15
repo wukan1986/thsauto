@@ -77,8 +77,11 @@ def cancel(idx: int = 0, host=_HOST, port=_PORT):
 
 
 def run(host=_HOST, port=_PORT):
-    """启动`Flask`服务"""
-    os.system(f'flask --app=thsauto.app run --host={host} --port={port}')
+    """启动服务"""
+    # 启动`Flask`服务
+    # os.system(f'flask --app=thsauto.app.flask_ run --host={host} --port={port}')
+    # 启动`FastAPI`服务
+    os.system(f'uvicorn thsauto.app.fastapi_:app --host={host} --port={port}')
 
 
 def _main():

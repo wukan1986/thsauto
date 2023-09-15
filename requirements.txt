@@ -2,5 +2,6 @@ pandas
 uiautomator2
 lxml
 loguru
-flask
+fastapi
+uvicorn[standard]
 fire

@@ -53,6 +53,9 @@ class XPath:
         if not path.endswith('/@bounds'):
             path += '/@bounds'
         bounds = self.xpath(path)
+        # 点不存在就返回(0, 0)
+        if len(bounds) == 0:
+            return 0, 0
         # 有可能这个点还没有完全显示，导致不存在
         return center(bounds[0])
 

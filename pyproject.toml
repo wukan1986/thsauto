@@ -26,7 +26,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 cli = [
-    "flask",
+    "fastapi",
+    "uvicorn[standard]",
     "fire",
 ]
 
