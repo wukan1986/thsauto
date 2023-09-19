@@ -322,7 +322,7 @@ def cancel_single(d: u2.Device,
     return confirm, {}
 
 
-btn_transaction = None
+btn_transaction = (0, 0)
 
 
 def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -> Dict[str, str]:
@@ -345,10 +345,11 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
     for i in range(3):
         if auto_stockcode == (0, 0):
             x.dump_hierarchy()
-            auto_stockcode = x.center('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]')
+            auto_stockcode = x.center('//*[@resource-id="com.hexin.plat.android:id/auto_stockcode"]/@bounds')
             if i > 0:
                 time.sleep(0.5)
         else:
+            # 从这跳出，表示成功
             break
     # 点击后弹出键盘精灵
     x.click(*auto_stockcode)
@@ -401,11 +402,18 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
 
     # 在显示分辨率不同时，可能导致点击不到，但第二次又能点击到，所以初始化时这个按钮还没有完全生成，所以需要第二次操作
     global btn_transaction
-    if btn_transaction is None:
-        x.dump_hierarchy()
-        btn_transaction = x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds')
-
+    for i in range(3):
+        if btn_transaction == (0, 0):
+            x.dump_hierarchy()
+            btn_transaction = x.center('//*[@resource-id="com.hexin.plat.android:id/btn_transaction"]/@bounds')
+            if i > 0:
+                time.sleep(0.5)
+        else:
+            # 从这跳出，表示成功
+            break
+    # 点击下单
     x.click(*btn_transaction)
+
     return {}
 
 

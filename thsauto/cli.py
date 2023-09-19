@@ -14,74 +14,76 @@ import fire
 import requests
 
 _PROTOCOL = 'http'  # https
-_HOST = '127.0.0.1'
-_PORT = 5000
+_HOST = os.environ.get('THSAUTO_HOST', '127.0.0.1')
+_PORT = int(os.environ.get('THSAUTO_PORT', '5000'))
 
 
-def connect(addr: str = "emulator-5554", host=_HOST, port=_PORT):
+def connect(addr: str = "emulator-5554"):
     """连接"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/connect',
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/connect',
                      params={'addr': addr})
     pprint.pprint(r.json())
 
 
-def get_balance(host=_HOST, port=_PORT):
+def get_balance():
     """查询资金"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/get_balance')
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/get_balance')
     pprint.pprint(r.json())
 
 
-def get_positions(host=_HOST, port=_PORT):
+def get_positions():
     """查询持仓"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/get_positions')
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/get_positions')
     pprint.pprint(r.json())
 
 
-def get_orders(break_after_done: bool = True, host=_HOST, port=_PORT):
+def get_orders(break_after_done: bool = True):
     """查询委托"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/get_orders',
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/get_orders',
                      params={'break_after_done': break_after_done})
     pprint.pprint(r.json())
 
 
-def order_at(idx: int = 0, host=_HOST, port=_PORT):
+def order_at(idx: int = 0):
     """指定委托信息"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/order_at/{idx}')
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/order_at/{idx}')
     pprint.pprint(r.json())
 
 
-def buy(qty: int, price: float = float('nan'), code: Optional[str] = None, host=_HOST, port=_PORT):
+def buy(qty: int, price: float = float('nan'), code: Optional[str] = None):
     """买入"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/buy',
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/buy',
                      params={'qty': qty, 'price': price, 'code': code})
     pprint.pprint(r.json())
 
 
-def sell(qty: int, price: float = float('nan'), code: Optional[str] = None, host=_HOST, port=_PORT):
+def sell(qty: int, price: float = float('nan'), code: Optional[str] = None):
     """卖出"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/sell',
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/sell',
                      params={'qty': qty, 'price': price, 'code': code})
     pprint.pprint(r.json())
 
 
-def cancels(opt: str = 'all', host=_HOST, port=_PORT):
+def cancels(opt: str = 'all'):
     """批量撤单"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/cancels/{opt}')
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/cancels/{opt}')
     pprint.pprint(r.json())
 
 
-def cancel(idx: int = 0, host=_HOST, port=_PORT):
+def cancel(idx: int = 0):
     """单笔撤单"""
-    r = requests.get(f'{_PROTOCOL}://{host}:{port}/cancel/{idx}')
+    r = requests.get(f'{_PROTOCOL}://{_HOST}:{_PORT}/cancel/{idx}')
     pprint.pprint(r.json())
 
 
 def run(host=_HOST, port=_PORT):
     """启动服务"""
     # 启动`Flask`服务
-    # os.system(f'flask --app=thsauto.app.flask_ run --host={host} --port={port}')
+    # os.system(f'flask --app=thsauto.app_.flask_ run --host={host} --port={port}')
+
     # 启动`FastAPI`服务
-    os.system(f'uvicorn thsauto.app.fastapi_:app --host={host} --port={port}')
+    # 不支持双层包，只能简化成一层
+    os.system(f'uvicorn thsauto.app:app --host={host} --port={port}')
 
 
 def _main():

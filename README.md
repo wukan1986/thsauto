@@ -222,3 +222,20 @@ thsauto sell --qty=100 --price=5.1 --code=000001
 thsauto cancels --opt=all
 thsauto cancel --idx=0
 ```
+
+如果之前启动时使用的是特殊IP和端口，可以通过环境变量临时设定
+```commandline
+# 启动Web服务
+thsauto run --host=127.0.0.1 --port=8080
+
+# Windows平台设置环境变量
+set THSAUTO_HOST=127.0.0.1
+set THSAUTO_PORT=8080
+thsauto connect --addr=emulator-5554
+
+# Linux平台设置环境变量
+export THSAUTO_HOST=127.0.0.1
+export THSAUTO_PORT=8080
+thsauto connect --addr=emulator-5554
+
+···
