@@ -238,4 +238,4 @@ export THSAUTO_HOST=127.0.0.1
 export THSAUTO_PORT=8080
 thsauto connect --addr=emulator-5554
 
-···
+```
