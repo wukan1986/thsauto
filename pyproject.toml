@@ -29,6 +29,7 @@ cli = [
     "fastapi",
     "uvicorn[standard]",
     "fire",
+    "requests",
 ]
 
 [tool.setuptools]

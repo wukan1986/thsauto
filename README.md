@@ -36,7 +36,6 @@
 5. 可惜，目前无法与`无障碍服务`共存
 
 ## 安装
-以下安装方法参考于`THSTrader`项目
 ```commandline
 # 普通版
 pip install -U thsauto
@@ -52,14 +51,14 @@ pip install -e .[cli]
 
 ## 安装雷电模拟器
 下载页：https://ldmnq.com/other/version-history-and-release-notes.html  
-安装包名类似于`ldinst64_5.0.67.2.exe`或`ldinst_9.0.57.2.exe`，约400MB~500MB，而不是`ldplayer9_ld_112_ld.exe`（约3MB）
+安装包名类似于`ldinst_9.0.57.2.exe`，约400MB~500MB，而不是`ldplayer9_ld_112_ld.exe`（约3MB）
 
 ## 模拟器设置分辨率
 1. 软件设置 -> 性能设置 -> 手机版 ->720*1280(dpi 320)
     - 此分变率在`weditor`显示中正好匹配，可用于二次开发。
 2. 自定义-> 360*1500(dpi 180)
     - 实盘时，此分变率在本人电脑`2560*1600`下比较合适
-    - 宽360小于720，字体也就小，界面中可以显示更多行
+    - 宽360小于720，字体小，界面中可以显示更多行
     - 高1500小于1600，能显示更多行，又能防止长屏过长时软件界面压缩导致界面模糊
     - dpi 120与dpi 180显示的委托列表行数一样多，目前使用的dpi 180
     
@@ -67,7 +66,7 @@ pip install -e .[cli]
 下载页：https://m.10jqka.com.cn/ 右上角按钮进行下载。需下载Android版(文件扩展名为`apk`)
 
 ## 安装配置ADB
-将安装路径`D:\leidian\LDPlayer9`或`D:\leidian\LDPlayer64`，添加到`环境变量`后就可以在控制台中使用`adb`命令了
+将安装路径`D:\leidian\LDPlayer9`添加到`环境变量`后可在控制台中使用`adb`命令
 
 ## 测试连接模拟器
 查看模拟器设备名，一般默认值为`emulator-5554`
@@ -75,16 +74,12 @@ pip install -e .[cli]
 adb kill-server
 adb devices
 ```
-初始化`uiautomator2`。1.3.0之后的版本已经不需要执行此步，在`u2.connect`时会自动推送相关文件
-```commandline
-python -m uiautomator2 init
-```
 
 ## 演示
 本自动化测试工具没有`登录`和`切换账号`功能，所以需要用户自己先打开指定界面。
 1. 打开同花顺APP
 2. 最下导航栏 -> 交易
-3. 最上导航栏 -> 模拟 或 某股
+3. 最上导航栏 -> 模拟 或 A股
 4. 点击中间区域（买入、卖出、撤单、持仓、查询）五个图标按钮中任意一个，即可进入交易界面
 5. 然后可以运行`demo.py`
 6. 注意：任何步骤执行完毕，都不应当出现弹出对话框未关闭的情况，否则会阻断之后的执行。如果遇到能复现的错误，请截图并保留日志
@@ -239,3 +234,10 @@ export THSAUTO_PORT=8080
 thsauto connect --addr=emulator-5554
 
 ```
+
+## 聚宽远程下单
+本功能基于`Web服务`和`CLI命令`
+1. `Web服务`: 安装在远程云服务器上，接收来自聚宽的`HTTP`请求
+2. `CLI命令`: 部署在客户端，将`Python调用`转换成`HTTP`请求
+
+仅复制`cli.py`文件或代码到聚宽中，部分修改调用。详情参考[joinquant示例](examples/joinquant.py)

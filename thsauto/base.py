@@ -49,7 +49,6 @@ def init_navigation(x):
 
 def get_balance(d: u2.Device) -> Dict[str, str]:
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
-    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -82,7 +81,6 @@ def _positions_in_view(x: XPath) -> Tuple[List[int], List[tuple]]:
 
 def get_positions(d: u2.Device) -> List[tuple]:
     root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
-    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -127,9 +125,20 @@ def _orders_in_view(x: XPath) -> Tuple[List[int], List[tuple], str]:
     return list1, list2, last_status
 
 
+def exists_tab(d: u2.Device, tab: str):
+    if tab == '买入':
+        root = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
+    if tab == '卖出':
+        root = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
+    if tab == '撤单':
+        root = d(resourceId="com.hexin.plat.android:id/scrollView")
+    if tab == '持仓':
+        root = d(resourceId="com.hexin.plat.android:id/recyclerview_id")
+    return root.wait(exists=True, timeout=1.0)
+
+
 def get_orders(d: u2.Device, break_after_done: bool) -> List[tuple]:
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
-    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -260,7 +269,6 @@ def cancel_single(d: u2.Device,
         return {}, {}
 
     root = d(resourceId="com.hexin.plat.android:id/scrollView")
-    root.wait(exists=True, timeout=6.0)
     root.fling.toBeginning()
     root.fling.toBeginning()
 
@@ -301,6 +309,9 @@ def cancel_single(d: u2.Device,
     node = root.child(index=found - 1, clickable=True)
     node.click(timeout=2.0)
 
+    confirm = {}
+    prompt = {}
+
     # 两种情况：1. 弹出撤单确认对话框。 2. 灰了点击无反应
     if _wait_cancel_single(d):
         x = XPath(d)
@@ -315,11 +326,20 @@ def cancel_single(d: u2.Device,
         else:
             # 撤单。建议之后再查一下委托列表进行状态更新
             _dialog3_cancel_single_select(x, 0)
+
+            # 可能出现提示框，需要处理
+            time.sleep(1.0)
+            x.dump_hierarchy()
+            # 委托已成交，不能撤单
+            prompt = _dialog_prompt(x)
+            if len(prompt) > 0:
+                _dialog2_select(1)
     else:
         # 2. 灰了点击无反应
-        confirm = {}
+        pass
+
     # 为与全撤输出统一
-    return confirm, {}
+    return confirm, prompt
 
 
 btn_transaction = (0, 0)
@@ -336,7 +356,7 @@ def _place_order(d: u2.Device, qty: int, price: float, symbol: str, code: str) -
 
     # 等特定对象出现
     node = d(resourceId="com.hexin.plat.android:id/auto_stockcode")
-    node.wait(exists=True, timeout=6.0)  # 可能有点问题，等待久一点试试
+    node.wait(exists=True, timeout=6.0)
 
     x = XPath(d)
 
@@ -510,3 +530,9 @@ def buy(d: u2.Device, qty: int, price: float, symbol: str, code: str, debug: boo
 
 def sell(d: u2.Device, qty: int, price: float, symbol: str, code: str, debug: bool, skip_popup: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     return _place_order_auto(d, qty, price, symbol, code, debug, skip_popup)
+
+
+def close_popup(d: u2.Device):
+    x = XPath(d)
+    x.dump_hierarchy()
+    _dialog2_select(x, 1)

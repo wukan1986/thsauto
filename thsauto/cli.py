@@ -7,75 +7,68 @@
 所以只能分别实现
 """
 import os
-import pprint
 from typing import Optional
 
-import fire
 import requests
 
-_PROTOCOL = 'http'  # https
 _HOST = os.environ.get('THSAUTO_HOST', '127.0.0.1')
 _PORT = int(os.environ.get('THSAUTO_PORT', '5000'))
 
-_URL = f'{_PROTOCOL}://{_HOST}:{_PORT}'
+_URL = f'http://{_HOST}:{_PORT}'
 
 
 def connect(addr: str = "emulator-5554"):
     """连接"""
-    r = requests.get(f'{_URL}/connect',
-                     params={'addr': addr})
-    pprint.pprint(r.json())
+    r = requests.get(f'{_URL}/connect', params={'addr': addr})
+    return r.json()
 
 
 def get_balance():
     """查询资金"""
     r = requests.get(f'{_URL}/get_balance')
-    pprint.pprint(r.json())
+    return r.json()
 
 
 def get_positions():
     """查询持仓"""
     r = requests.get(f'{_URL}/get_positions')
-    pprint.pprint(r.json())
+    return r.json()
 
 
 def get_orders(break_after_done: bool = True):
     """查询委托"""
-    r = requests.get(f'{_URL}/get_orders',
-                     params={'break_after_done': break_after_done})
-    pprint.pprint(r.json())
+    r = requests.get(f'{_URL}/get_orders', params={'break_after_done': break_after_done})
+    return r.json()
 
 
 def order_at(idx: int = 0):
     """指定委托信息"""
     r = requests.get(f'{_URL}/order_at/{idx}')
-    pprint.pprint(r.json())
+    return r.json()
 
 
 def buy(qty: int, price: float = float('nan'), code: Optional[str] = None):
     """买入"""
-    r = requests.get(f'{_URL}/buy',
-                     params={'qty': qty, 'price': price, 'code': code})
-    pprint.pprint(r.json())
+    r = requests.get(f'{_URL}/buy', params={'qty': qty, 'price': price, 'code': code})
+    return r.json()
 
 
 def sell(qty: int, price: float = float('nan'), code: Optional[str] = None):
     """卖出"""
-    r = requests.get(f'{_URL}/sell',
-                     params={'qty': qty, 'price': price, 'code': code})
-    pprint.pprint(r.json())
+    r = requests.get(f'{_URL}/sell', params={'qty': qty, 'price': price, 'code': code})
+    return r.json()
 
 
 def cancels(opt: str = 'all'):
     """批量撤单"""
     r = requests.get(f'{_URL}/cancels/{opt}')
-    pprint.pprint(r.json())
+    return r.json()
 
 
 def cancel(idx: int = 0):
     """单笔撤单"""
     r = requests.get(f'{_URL}/cancel/{idx}')
-    pprint.pprint(r.json())
+    return r.json()
 
 
 def run(host=_HOST, port=_PORT):
@@ -89,7 +82,9 @@ def run(host=_HOST, port=_PORT):
 
 
 def _main():
-    fire.Fire()
+    import pprint
+    import fire
+    fire.Fire(serialize=pprint.pprint)
 
 
 if __name__ == '__main__':

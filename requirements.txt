@@ -5,3 +5,4 @@ loguru
 fastapi
 uvicorn[standard]
 fire
+requests

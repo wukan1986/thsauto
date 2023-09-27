@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Any, Optional, Union
 import pandas as pd
 import uiautomator2 as u2
 
-from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple, init_navigation
+from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple, init_navigation, exists_tab
 from .parse import parse_confirm_order, parse_orders, parse_positions, parse_balance, parse_confirm_cancel
 from .utils import Timer
 from .xpath import XPath
@@ -66,14 +66,20 @@ class THS:
             if len(self.navigation) != 5:
                 self.x = None
                 raise Exception("请检查当前是否处于可交易界面!!!")
+            # else:
+            #     print(self.navigation)
 
     def goto(self, tab: str):
-        if True:
+        # 卖出，然后撤单，可能没点过去，所以循环一下
+        for i in range(3):
             if self.x is None:
                 self.home()
             self.x.click(*self.navigation[tab])
-        else:
-            self.d(resourceId="com.hexin.plat.android:id/btn", text=tab).click()
+
+            if exists_tab(self.d, tab):
+                return
+        # 最后补救一次
+        self.d(resourceId="com.hexin.plat.android:id/btn", text=tab).click()
 
     def get_balance(self) -> Dict[str, float]:
         """查询资产
