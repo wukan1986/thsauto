@@ -2,11 +2,11 @@ import pandas as pd
 
 
 def str2float(s):
-    return float(s.replace(',', '').replace('--', '0.0').replace('%', ''))
+    return float(s.replace(',', '').replace('--', '0.0').replace('%', '').replace(' ', '') or 0.0)
 
 
 def str2int(s):
-    return int(s.replace(',', '').replace('--', '0'))
+    return int(s.replace(',', '').replace('--', '0').replace(' ', '') or 0)
 
 
 def parse_confirm_order(dict_):
