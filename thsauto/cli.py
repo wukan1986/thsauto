@@ -23,6 +23,12 @@ def connect(addr: str = "emulator-5554"):
     return r.json()
 
 
+def refresh():
+    """刷新"""
+    r = requests.get(f'{_URL}/refresh')
+    return r.json()
+
+
 def get_balance():
     """查询资金"""
     r = requests.get(f'{_URL}/get_balance')

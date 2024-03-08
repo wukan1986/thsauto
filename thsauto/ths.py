@@ -3,7 +3,8 @@ from typing import Dict, Tuple, Any, Optional, Union
 import pandas as pd
 import uiautomator2 as u2
 
-from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple, init_navigation, exists_tab
+from .base import get_balance, get_positions, get_orders, buy, sell, cancel_single, cancel_multiple, init_navigation, \
+    exists_tab
 from .parse import parse_confirm_order, parse_orders, parse_positions, parse_balance, parse_confirm_cancel
 from .utils import Timer
 from .xpath import XPath
@@ -81,6 +82,12 @@ class THS:
         # 最后补救一次
         self.d(resourceId="com.hexin.plat.android:id/btn", text=tab).click()
 
+    def refresh(self) -> Dict[str, float]:
+        """刷新"""
+        with Timer():
+            self.d(resourceId="com.hexin.plat.android:id/refresh_img").click()
+            return {}
+
     def get_balance(self) -> Dict[str, float]:
         """查询资产
 
@@ -126,7 +133,7 @@ class THS:
             self.orders = get_orders(self.d, break_after_done)
             return parse_orders(self.orders)
 
-    def order_at(self, idx: int) -> tuple:
+    def order_at(self, idx: int) -> Tuple:
         """返回委托列表中指定位置的委托
 
         Parameters
@@ -136,7 +143,7 @@ class THS:
 
         Returns
         -------
-        tuple
+        Tuple
 
         """
         assert 0 <= idx < len(self.orders), '请先执行`get_orders`，或不要超过有效范围'

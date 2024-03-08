@@ -188,6 +188,7 @@ thsauto run --host=0.0.0.0 --port=5000
 
 # 支持的Web请求
 curl http://127.0.0.1:5000/connect?addr=emulator-5554
+curl http://127.0.0.1:5000/refresh
 curl http://127.0.0.1:5000/get_balance
 curl http://127.0.0.1:5000/get_positions
 curl http://127.0.0.1:5000/get_orders
@@ -208,6 +209,7 @@ thsauto run --host=0.0.0.0 --port=5000
 
 # 支持的CLI指令
 thsauto connect --addr=emulator-5554
+thsauto refresh
 thsauto get_balance
 thsauto get_positions
 thsauto get_orders

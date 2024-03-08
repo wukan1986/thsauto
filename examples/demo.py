@@ -17,6 +17,8 @@ t.connect(addr="emulator-5554")
 # 可事后再改成可以下单，也可以在下单函数中指定
 # t.debug = False
 # %%
+t.refresh()
+# %%
 # 资产
 balance = t.get_balance()
 balance

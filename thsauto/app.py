@@ -20,6 +20,11 @@ async def connect(addr: str = "emulator-5554"):
     return t.connect(addr)
 
 
+@app.get("/refresh")
+async def refresh():
+    return t.refresh()
+
+
 @app.get("/get_balance")
 async def get_balance():
     return t.get_balance()

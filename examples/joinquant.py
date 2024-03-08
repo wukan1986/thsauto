@@ -23,6 +23,8 @@ t._URL = "http://123.123.123.123:5000"
 
 print(t.connect(addr="emulator-5554"))
 
+print(t.refresh())
+
 print(t.get_balance())
 
 print(t.get_positions())
